@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Info Viewer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <h2>Upload Student Spreadsheet</h2>
+  <input type="file" id="fileInput" />
+  <br><br>
+  <label for="nameInput">Enter Full Name:</label>
+  <input type="text" id="nameInput" placeholder="e.g. Mariana Ortiz" />
+  <br><br>
+  <label for="infoSelect">Choose info to display:</label>
+  <select id="infoSelect"></select>
+  <br><br>
+  <button onclick="displayInfo()">Show Info</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    let data = [];
+    const columnsToShow = {
+      1: 'Student ID',
+      2: 'Grade',
+      3: 'Trend',
+      4: 'NOVA',
+      5: 'Cumulative Score 2024-2025',
+      6: 'Cumulative Score 2023-2024',
+      7: 'Cumulative Score 2022-2023',
+      8: 'Cumulative Score 2021-2022',
+      9: 'Cumulative Score 2020-2021',
+      10: 'Cumulative Score 2019-2020',
+      11: 'Extracurricular Activities 2024-2025',
+      12: 'Extracurricular Activities 2023-2024',
+      13: 'Extracurricular Activities 2022-2023',
+      14: 'Extracurricular Activities 2021-2022',
+      15: 'Extracurricular Activities 2021-2020',
+      16: 'Extracurricular Activities 2020-2019'
+    };
+
+    const infoSelect = document.getElementById('infoSelect');
+    for (const [key, value] of Object.entries(columnsToShow)) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.text = value;
+      infoSelect.appendChild(option);
+    }
+
+    document.getElementById('fileInput').addEventListener('change', function (e) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const dataBinary = e.target.result;
+        const workbook = XLSX.read(dataBinary, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+        data.forEach(row => {
+          row['Full Name'] = (row['Nombre'] || '').trim() + ' ' + (row['Apellido'] || '').trim();
+        });
+
+        alert("File loaded successfully!");
+      };
+      reader.readAsBinaryString(e.target.files[0]);
+    });
+
+    function displayInfo() {
+      const name = document.getElementById('nameInput').value.trim().toLowerCase();
+      const column = document.getElementById('infoSelect').value;
+
+      const result = data.find(row => row['Full Name'].toLowerCase() === name);
+
+      const output = document.getElementById('output');
+      if (!result) {
+        output.textContent = "Student not found. Make sure you typed the name correctly.";
+      } else {
+        output.textContent = `${column} for ${result['Full Name']}:\n${result[column]}`;
+      }
+    }
+  </script>
+</body>
+</html>
