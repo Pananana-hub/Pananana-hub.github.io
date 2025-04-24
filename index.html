@@ -4,46 +4,6 @@
   <meta charset="UTF-8">
   <title>Eaglepedia</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    body {
-      background-color: #3485e0;
-      color: white;
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-
-    h2 {
-      color: white;
-    }
-
-    button {
-      background-color: #ffffff;
-      color: #3485e0;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    input, select {
-      border: 1px solid #ffffff;
-      padding: 8px;
-      border-radius: 4px;
-      color: #3485e0;
-      background-color: #ffffff;
-      margin-top: 5px;
-      margin-bottom: 10px;
-    }
-
-    pre {
-      background-color: #ffffff;
-      color: #3485e0;
-      padding: 10px;
-      border-radius: 5px;
-      white-space: pre-wrap;
-    }
-  </style>
 </head>
 <body>
   <h2>Upload Student Spreadsheet</h2>
@@ -95,7 +55,7 @@
         const workbook = XLSX.read(dataBinary, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        data = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+        data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
         data.forEach(row => {
           row['Full Name'] = (row['Nombre'] || '').trim() + ' ' + (row['Apellido'] || '').trim();
@@ -116,7 +76,7 @@
       if (!result) {
         output.textContent = "Student not found. Make sure you typed the name correctly.";
       } else {
-        output.textContent = `${column} for ${result['Full Name']}:\n${result[column]}`;
+        output.innerHTML = `<strong>${column} for ${result['Full Name']}:</strong><br>${String(result[column]).replace(/\n/g, '<br>')}`;
       }
     }
   </script>
