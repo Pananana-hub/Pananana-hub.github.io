@@ -1,85 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Eaglepedia</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     body {
+      background-color: #3485e0;
+      color: white;
       font-family: Arial, sans-serif;
-      padding: 2rem;
+      padding: 20px;
     }
-    input, select, button {
-      margin: 0.5rem 0;
-      padding: 0.5rem;
-      font-size: 1rem;
+
+    h2 {
+      color: white;
     }
-    #output {
-      margin-top: 1.5rem;
-      background: #3380ff;
-      padding: 1rem;
+
+    button {
+      background-color: #ffffff;
+      color: #3485e0;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    input, select {
+      border: 1px solid #ffffff;
+      padding: 8px;
+      border-radius: 4px;
+      color: #3485e0;
+      background-color: #ffffff;
+      margin-top: 5px;
+      margin-bottom: 10px;
+    }
+
+    pre {
+      background-color: #ffffff;
+      color: #3485e0;
+      padding: 10px;
+      border-radius: 5px;
       white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <h2>EAGLEPEDIA</h2>
-
-  <label for="nameInput">Enter Full Name:</label><br>
-  <input type="text" id="nameInput" placeholder="e.g. Mariana Ortiz" /><br><br>
-
-  <label for="infoSelect">Choose info to display:</label><br>
-  <select id="infoSelect"></select><br><br>
-
+  <h2>Upload Student Spreadsheet</h2>
+  <input type="file" id="fileInput" />
+  <br><br>
+  <label for="nameInput">Enter Full Name:</label>
+  <input type="text" id="nameInput" placeholder="e.g. Mariana Ortiz" />
+  <br><br>
+  <label for="infoSelect">Choose info to display:</label>
+  <select id="infoSelect"></select>
+  <br><br>
   <button onclick="displayInfo()">Show Info</button>
 
   <pre id="output"></pre>
 
   <script>
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRNKRSt5AQiACvr0DM6CMDwHCxclNcqoSVKjapcMpNVhauINZx2yKhP2SpV_4pzW12wyV1A_bwLZ5HP/pub?output=csv";
     let data = [];
+    const columnsToShow = {
+      1: 'Student ID',
+      2: 'Grade',
+      3: 'Trend',
+      4: 'NOVA',
+      5: 'Cumulative Score 2024-2025',
+      6: 'Cumulative Score 2023-2024',
+      7: 'Cumulative Score 2022-2023',
+      8: 'Cumulative Score 2021-2022',
+      9: 'Cumulative Score 2020-2021',
+      10: 'Cumulative Score 2019-2020',
+      11: 'Extracurricular Activities 2024-2025',
+      12: 'Extracurricular Activities 2023-2024',
+      13: 'Extracurricular Activities 2022-2023',
+      14: 'Extracurricular Activities 2021-2022',
+      15: 'Extracurricular Activities 2021-2020',
+      16: 'Extracurricular Activities 2020-2019'
+    };
 
-    async function loadData() {
-      const res = await fetch(SHEET_URL);
-      const csvText = await res.text();
-      const rows = csvText.trim().split("\n").map(row => row.split(","));
-      const headers = rows[0];
-      data = rows.slice(1).map(row => {
-        const obj = {};
-        headers.forEach((header, i) => {
-          obj[header.trim()] = row[i] ? row[i].trim() : '';
-        });
-        obj['Full Name'] = `${obj['Nombre'] || ''} ${obj['Apellido'] || ''}`.trim();
-        return obj;
-      });
-
-      // Populate select dropdown
-      const infoSelect = document.getElementById("infoSelect");
-      headers.forEach(header => {
-        if (header !== "Nombre" && header !== "Apellido") {
-          const option = document.createElement("option");
-          option.value = header;
-          option.text = header;
-          infoSelect.appendChild(option);
-        }
-      });
+    const infoSelect = document.getElementById('infoSelect');
+    for (const [key, value] of Object.entries(columnsToShow)) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.text = value;
+      infoSelect.appendChild(option);
     }
 
+    document.getElementById('fileInput').addEventListener('change', function (e) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const dataBinary = e.target.result;
+        const workbook = XLSX.read(dataBinary, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        data = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+
+        data.forEach(row => {
+          row['Full Name'] = (row['Nombre'] || '').trim() + ' ' + (row['Apellido'] || '').trim();
+        });
+
+        alert("File loaded successfully!");
+      };
+      reader.readAsBinaryString(e.target.files[0]);
+    });
+
     function displayInfo() {
-      const inputName = document.getElementById("nameInput").value.trim().toLowerCase();
-      const column = document.getElementById("infoSelect").value;
-      const output = document.getElementById("output");
+      const name = document.getElementById('nameInput').value.trim().toLowerCase();
+      const column = document.getElementById('infoSelect').value;
 
-      const result = data.find(row => row["Full Name"].toLowerCase() === inputName);
+      const result = data.find(row => row['Full Name'].toLowerCase() === name);
 
+      const output = document.getElementById('output');
       if (!result) {
         output.textContent = "Student not found. Make sure you typed the name correctly.";
       } else {
-        output.textContent = `${column} for ${result["Full Name"]}:\n${result[column]}`;
+        output.textContent = `${column} for ${result['Full Name']}:\n${result[column]}`;
       }
     }
-
-    loadData();
   </script>
 </body>
 </html>
-
