@@ -44,7 +44,14 @@
     async function loadData() {
       const res = await fetch(SHEET_URL);
       const csvText = await res.text();
-      const rows = csvText.trim().split("\n").map(row => row.split(","));
+
+      // Proper CSV parser with support for quoted fields
+      const rows = csvText.trim().split("\n").map(row => {
+        return row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(cell =>
+          cell.replace(/^"|"$/g, '').trim()
+        ) || [];
+      });
+
       const headers = rows[0];
       data = rows.slice(1).map(row => {
         const obj = {};
