@@ -10,11 +10,13 @@
       font-family: Arial, sans-serif;
       padding: 2rem;
     }
+
     input, select, button {
       margin: 0.5rem 0;
       padding: 0.5rem;
       font-size: 1rem;
     }
+
     #output {
       margin-top: 1.5rem;
       background: #f1f1f1;
@@ -40,29 +42,23 @@
   <script>
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRNKRSt5AQiACvr0DM6CMDwHCxclNcqoSVKjapcMpNVhauINZx2yKhP2SpV_4pzW12wyV1A_bwLZ5HP/pub?output=csv";
     let data = [];
+    let headers = [];
 
     async function loadData() {
       const res = await fetch(SHEET_URL);
       const csvText = await res.text();
-
-      // Proper CSV parser with support for quoted fields
-      const rows = csvText.trim().split("\n").map(row => {
-        return row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(cell =>
-          cell.replace(/^"|"$/g, '').trim()
-        ) || [];
-      });
-
-      const headers = rows[0];
+      const rows = csvText.trim().split("\n").map(row => row.split(","));
+      headers = rows[0].map(h => h.trim());
       data = rows.slice(1).map(row => {
         const obj = {};
         headers.forEach((header, i) => {
-          obj[header.trim()] = row[i] ? row[i].trim() : '';
+          obj[header] = row[i] ? row[i].trim() : '';
         });
         obj['Full Name'] = `${obj['Nombre'] || ''} ${obj['Apellido'] || ''}`.trim();
         return obj;
       });
 
-      // Populate select dropdown
+      // Populate dropdown
       const infoSelect = document.getElementById("infoSelect");
       headers.forEach(header => {
         if (header !== "Nombre" && header !== "Apellido") {
@@ -72,6 +68,12 @@
           infoSelect.appendChild(option);
         }
       });
+
+      // Add "All Info" option
+      const allOption = document.createElement("option");
+      allOption.value = "All Info";
+      allOption.text = "All Info";
+      infoSelect.appendChild(allOption);
     }
 
     function displayInfo() {
@@ -83,6 +85,14 @@
 
       if (!result) {
         output.textContent = "Student not found. Make sure you typed the name correctly.";
+      } else if (column === "All Info") {
+        let text = `All Info for ${result["Full Name"]}:\n`;
+        headers.forEach(header => {
+          if (header !== "Nombre" && header !== "Apellido") {
+            text += `${header}: ${result[header]}\n`;
+          }
+        });
+        output.textContent = text.trim();
       } else {
         output.textContent = `${column} for ${result["Full Name"]}:\n${result[column]}`;
       }
