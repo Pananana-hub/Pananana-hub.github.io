@@ -58,21 +58,13 @@
         return obj;
       });
 
-      // Populate dropdown with custom labels
+      // Populate dropdown
       const infoSelect = document.getElementById("infoSelect");
       headers.forEach(header => {
         if (header !== "Nombre" && header !== "Apellido") {
           const option = document.createElement("option");
           option.value = header;
-
-          // Custom label for "Cul 202x" columns
-          if (/^Cul\s*20\d{2}$/.test(header)) {
-            const year = header.match(/20\d{2}/)[0];
-            option.text = `Cumulative Score ${year}`;
-          } else {
-            option.text = header;
-          }
-
+          option.text = header;
           infoSelect.appendChild(option);
         }
       });
@@ -97,18 +89,12 @@
         let text = `All Info for ${result["Full Name"]}:\n`;
         headers.forEach(header => {
           if (header !== "Nombre" && header !== "Apellido") {
-            const label = /^Cul\s*20\d{2}$/.test(header)
-              ? `Cumulative Score ${header.match(/20\d{2}/)[0]}`
-              : header;
-            text += `${label}: ${result[header]}\n`;
+            text += `${header}: ${result[header]}\n`;
           }
         });
         output.textContent = text.trim();
       } else {
-        const label = /^Cul\s*20\d{2}$/.test(column)
-          ? `Cumulative Score ${column.match(/20\d{2}/)[0]}`
-          : column;
-        output.textContent = `${label} for ${result["Full Name"]}:\n${result[column]}`;
+        output.textContent = `${column} for ${result["Full Name"]}:\n${result[column]}`;
       }
     }
 
