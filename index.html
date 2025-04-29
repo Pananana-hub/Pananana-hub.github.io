@@ -31,7 +31,9 @@
   <input type="text" id="nameInput" placeholder="e.g. Mariana Ortiz" /><br><br>
 
   <label for="infoSelect">Choose info to display:</label><br>
-  <select id="infoSelect"></select><br><br>
+  <select id="infoSelect">
+    <option value="ALL_INFO">All Info</option>
+  </select><br><br>
 
   <button onclick="displayInfo()">Show Info</button>
 
@@ -40,17 +42,17 @@
   <script>
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRNKRSt5AQiACvr0DM6CMDwHCxclNcqoSVKjapcMpNVhauINZx2yKhP2SpV_4pzW12wyV1A_bwLZ5HP/pub?output=csv";
     let data = [];
+    let headerMap = {};
 
     async function loadData() {
       const res = await fetch(SHEET_URL);
       const csvText = await res.text();
 
-      // Proper CSV parser with support for quoted fields
-      const rows = csvText.trim().split("\n").map(row => {
-        return row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(cell =>
+      const rows = csvText.trim().split("\n").map(row =>
+        row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(cell =>
           cell.replace(/^"|"$/g, '').trim()
-        ) || [];
-      });
+        ) || []
+      );
 
       const headers = rows[0];
       data = rows.slice(1).map(row => {
@@ -62,13 +64,23 @@
         return obj;
       });
 
-      // Populate select dropdown
       const infoSelect = document.getElementById("infoSelect");
+
       headers.forEach(header => {
         if (header !== "Nombre" && header !== "Apellido") {
           const option = document.createElement("option");
           option.value = header;
-          option.text = header;
+
+          // Customize label display
+          let label = header;
+          if (/^202[0-5]$/.test(header)) {
+            label = `Cumulative Score ${header}`;
+          } else if (/^\d{4}-\d{4}$/.test(header)) {
+            label = `Extracurricular Activities ${header}`;
+          }
+
+          option.text = label;
+          headerMap[header] = label;
           infoSelect.appendChild(option);
         }
       });
@@ -76,15 +88,28 @@
 
     function displayInfo() {
       const inputName = document.getElementById("nameInput").value.trim().toLowerCase();
-      const column = document.getElementById("infoSelect").value;
+      const selected = document.getElementById("infoSelect").value;
       const output = document.getElementById("output");
 
       const result = data.find(row => row["Full Name"].toLowerCase() === inputName);
 
       if (!result) {
         output.textContent = "Student not found. Make sure you typed the name correctly.";
+        return;
+      }
+
+      if (selected === "ALL_INFO") {
+        let fullInfo = `All Info for ${result["Full Name"]}:\n\n`;
+        for (let [key, value] of Object.entries(result)) {
+          if (key !== "Full Name" && key !== "Nombre" && key !== "Apellido") {
+            const label = headerMap[key] || key;
+            fullInfo += `${label}: ${value}\n`;
+          }
+        }
+        output.textContent = fullInfo;
       } else {
-        output.textContent = `${column} for ${result["Full Name"]}:\n${result[column]}`;
+        const label = headerMap[selected] || selected;
+        output.textContent = `${label} for ${result["Full Name"]}:\n${result[selected]}`;
       }
     }
 
