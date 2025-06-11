@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Prueba Saber EAGLEPEDIA</title>
+  <title>Prueba Saber Eaglepedia</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,95 +37,16 @@
 </head>
 <body>
 
-  <h1>Prueba Saber Timeline</h1>
+  <h1>Prueba Saber Eaglepedia</h1>
   <div id="timelineOutput">Cargando datos...</div>
 
   <script>
-    // URL to the published Google Sheet as CSV
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQsdsABhRQKkRzDdyWjwID__X1VY9X2pMnU-3sNEEgr8hYaLW9KRrx9ZAsRY35o9A/pub?output=csv';
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRNKRSt5AQiACvr0DM6CMDwHCxclNcqoSVKjapcMpNVhauINZx2yKhP2SpV_4pzW12wyV1A_bwLZ5HP/pub?output=csv";
 
-    // Helper: parse CSV to array of objects
-    function parseCSV(csv) {
-      const lines = csv.trim().split('\n');
-      const headers = lines[0].split(',');
-      const data = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        const obj = {};
-        const currentLine = lines[i].split(',');
-        headers.forEach((header, index) => {
-          obj[header.trim()] = currentLine[index]?.trim();
-        });
-        data.push(obj);
-      }
+    async function fetchCSV(url) {
+      const response = await fetch(url);
+      const data = await response.text();
       return data;
     }
 
-    function buildSimulacroInfo(result, label) {
-      const subjects = [
-        "Total",
-        "Lectura Crítica",
-        "Matemáticas",
-        "Sociales",
-        "Ciencias Naturales",
-        "Inglés"
-      ];
-
-      const section = document.createElement("div");
-      section.className = "simulacro-box";
-
-      const title = document.createElement("h3");
-      title.textContent = label;
-      section.appendChild(title);
-
-      const ul = document.createElement("ul");
-      subjects.forEach(subject => {
-        const key = `${label} ${subject}`;
-        if (result[key] !== undefined && result[key] !== '') {
-          const li = document.createElement("li");
-          li.innerHTML = `<strong>${subject}:</strong> ${result[key]}`;
-          ul.appendChild(li);
-        }
-      });
-
-      section.appendChild(ul);
-      return section;
-    }
-
-    function displayTimeline(dataRow) {
-      const output = document.getElementById("timelineOutput");
-      output.innerHTML = "";
-
-      const categories = [
-        "Simulacro 1",
-        "Simulacro 2",
-        "Simulacro 3",
-        "Simulacro 4",
-        "Simulacro 5",
-        "Prueba Saber"
-      ];
-
-      categories.forEach(cat => {
-        const infoBox = buildSimulacroInfo(dataRow, cat);
-        output.appendChild(infoBox);
-      });
-    }
-
-    // Fetch and render
-    fetch(sheetUrl)
-      .then(response => response.text())
-      .then(csv => {
-        const data = parseCSV(csv);
-        if (data.length > 0) {
-          displayTimeline(data[0]); // show the first student's data
-        } else {
-          document.getElementById("timelineOutput").textContent = "No hay datos disponibles.";
-        }
-      })
-      .catch(error => {
-        console.error("Error loading sheet:", error);
-        document.getElementById("timelineOutput").textContent = "Error cargando datos.";
-      });
-  </script>
-</body>
-</html>
+    function parseCS
