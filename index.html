@@ -2,51 +2,118 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Prueba Saber Eaglepedia</title>
+  <title>Eaglepedia</title>
   <style>
     body {
+      background-color: #0a4f9c;
+      color: white;
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 20px;
+      padding: 2rem;
     }
-    h1 {
-      text-align: center;
+    input, select, button {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      font-size: 1rem;
     }
-    .simulacro-box {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .simulacro-box h3 {
-      color: #333;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 5px;
-    }
-    .simulacro-box ul {
-      list-style: none;
-      padding: 0;
-    }
-    .simulacro-box li {
-      padding: 4px 0;
+    #output {
+      margin-top: 1.5rem;
+      background: #f1f1f1;
+      color: black;
+      padding: 1rem;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
+  <h2>EAGLEPEDIA</h2>
 
-  <h1>Prueba Saber Eaglepedia</h1>
-  <div id="timelineOutput">Cargando datos...</div>
+  <label for="nameInput">Enter Full Name:</label><br>
+  <input type="text" id="nameInput" placeholder="e.g. Mariana Ortiz" /><br><br>
+
+  <label for="infoSelect">Choose info to display:</label><br>
+  <select id="infoSelect">
+    <option value="ALL_INFO">All Info</option>
+  </select><br><br>
+
+  <button onclick="displayInfo()">Show Info</button>
+
+  <pre id="output"></pre>
 
   <script>
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRNKRSt5AQiACvr0DM6CMDwHCxclNcqoSVKjapcMpNVhauINZx2yKhP2SpV_4pzW12wyV1A_bwLZ5HP/pub?output=csv";
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRNKRSt5AQiACvr0DM6CMDwHCxclNcqoSVKjapcMpNVhauINZx2yKhP2SpV_4pzW12wyV1A_bwLZ5HP/pub?output=csv";
+    let data = [];
+    let headerMap = {};
 
-    async function fetchCSV(url) {
-      const response = await fetch(url);
-      const data = await response.text();
-      return data;
+    async function loadData() {
+      const res = await fetch(SHEET_URL);
+      const csvText = await res.text();
+
+      const rows = csvText.trim().split("\n").map(row =>
+        row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(cell =>
+          cell.replace(/^"|"$/g, '').trim()
+        ) || []
+      );
+
+      const headers = rows[0];
+      data = rows.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((header, i) => {
+          obj[header.trim()] = row[i] ? row[i].trim() : '';
+        });
+        obj['Full Name'] = `${obj['Nombre'] || ''} ${obj['Apellido'] || ''}`.trim();
+        return obj;
+      });
+
+      const infoSelect = document.getElementById("infoSelect");
+
+      headers.forEach(header => {
+        if (header !== "Nombre" && header !== "Apellido") {
+          const option = document.createElement("option");
+          option.value = header;
+
+          // Customize label display
+          let label = header;
+          if (/^202[0-5]$/.test(header)) {
+            label = `Cumulative Score ${header}`;
+          } else if (/^\d{4}-\d{4}$/.test(header)) {
+            label = `Extracurricular Activities ${header}`;
+          }
+
+          option.text = label;
+          headerMap[header] = label;
+          infoSelect.appendChild(option);
+        }
+      });
     }
 
-    function parseCS
+    function displayInfo() {
+      const inputName = document.getElementById("nameInput").value.trim().toLowerCase();
+      const selected = document.getElementById("infoSelect").value;
+      const output = document.getElementById("output");
+
+      const result = data.find(row => row["Full Name"].toLowerCase() === inputName);
+
+      if (!result) {
+        output.textContent = "Student not found. Make sure you typed the name correctly.";
+        return;
+      }
+
+      if (selected === "ALL_INFO") {
+        let fullInfo = `All Info for ${result["Full Name"]}:\n\n`;
+        for (let [key, value] of Object.entries(result)) {
+          if (key !== "Full Name" && key !== "Nombre" && key !== "Apellido") {
+            const label = headerMap[key] || key;
+            fullInfo += `${label}: ${value}\n`;
+          }
+        }
+        output.textContent = fullInfo;
+      } else {
+        const label = headerMap[selected] || selected;
+        output.textContent = `${label} for ${result["Full Name"]}:\n${result[selected]}`;
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
